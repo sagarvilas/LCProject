@@ -1,0 +1,9 @@
+[project]
+name = "lcproject"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.10"
+dependencies = [
+    "langchain>=1.0.3",
+    "langchain-anthropic>=1.0.0",
+]
