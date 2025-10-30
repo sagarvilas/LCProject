@@ -1,6 +1,9 @@
 from langchain.agents import create_agent
 import os
 from getpass import getpass
+from dotenv import load_dotenv
+
+load_dotenv(encoding='utf-8-sig')
 
 if "ANTHROPIC_API_KEY" not in os.environ:
     print("Please set the environment variable 'ANTHROPIC_API_KEY'")
@@ -14,9 +17,12 @@ agent = create_agent(
     model = "anthropic:claude-sonnet-4-5",
     tools = [get_weather],
     system_prompt = "You're a helpful assistant that provides weather information.",
-    debug = True
+    debug = False
 )
 
-agent.invoke(
+output = agent.invoke(
     {"messages": [{"role": "user", "content": "What's the weather in New York?"}]}
 )
+
+
+print(output)
