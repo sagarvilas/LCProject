@@ -14,4 +14,5 @@ model = ChatAnthropic(model="claude-sonnet-4-5")
 
 chain = prompt | model
 
-chain.invoke({"question": "What is LangChain?"})
+result = chain.invoke({"question": "What is LangChain?"})
+print(result.content)
