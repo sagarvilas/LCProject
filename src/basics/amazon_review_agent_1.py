@@ -4,6 +4,15 @@ from pydantic import BaseModel, Field
 from typing import Optional, List
 import json
 from langchain.tools import tool
+import os
+from getpass import getpass
+from dotenv import load_dotenv
+
+load_dotenv(encoding='utf-8-sig')
+
+if "ANTHROPIC_API_KEY" not in os.environ:
+    print("Please set the environment variable 'ANTHROPIC_API_KEY'")
+    os.environ["ANTHROPIC_API_KEY"] = getpass()
 
 class ReviewInput(BaseModel):
     product_name: str = Field(description="Name of the product")
@@ -59,7 +68,7 @@ Requirements:
 - Make it authentic and believable
 """
 
-        llm = ChatOllama(model="mistral", temperature=0.5)
+        llm = create_agent(model="anthropic:claude-sonnet-4-5")
         response = llm.invoke(prompt)
         return response.content
 
@@ -77,7 +86,7 @@ def create_review_agent():
 Your role:
 1. Gather information from the user about their product experience
 2. Ask clarifying questions if needed (pros, cons, rating, etc.)
-3. Use the generate_product_review tool to create the review
+3. Use the generate_review tool to create the review
 4. Present the review to the user and offer revisions
 
 Be conversational and helpful. Guide users through the review creation process."""
@@ -88,7 +97,7 @@ Be conversational and helpful. Guide users through the review creation process."
 
     # Create agent
     return create_agent(
-        model=llm,
+        model="anthropic:claude-sonnet-4-5",
         tools=tools,
         system_prompt=prompt,
         debug=True
@@ -118,13 +127,15 @@ if __name__ == "__main__":
         "tone": "enthusiastic"
     }
 
-    response = agent.invoke({
-        "input": f"Generate a review with this data: {json.dumps(review_data)}"
-    })
-    print(response)
+
+    output = agent.invoke(
+        {"messages": [{"role": "user", "content": f"Generate a review with this data: {json.dumps(review_data)}"}]}
+    )
+
+    print(output)
 
     # Example 2: Conversational input
-    response = agent.invoke({
-        "input": "I need help writing a review for a coffee maker I bought"
-    })
-    print(response)
+    # response = agent.invoke({
+    #     "input": "I need help writing a review for a coffee maker I bought"
+    # })
+    # print(response)
