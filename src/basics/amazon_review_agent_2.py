@@ -5,6 +5,20 @@ from typing import Optional, List
 import json
 from langchain.tools import tool
 
+
+_llm_instance = None
+
+def get_llm():
+    """Get or create shared LLM instance"""
+    global _llm_instance
+    if _llm_instance is None:
+        _llm_instance = ChatOllama(
+            model="mistral",
+            validate_model_on_init=True,
+            temperature=0.5
+        )
+    return _llm_instance
+
 class ReviewInput(BaseModel):
     product_name: str = Field(description="Name of the product")
     product_category: str = Field(description="Category (electronics, books, etc.)")
@@ -59,7 +73,7 @@ Requirements:
 - Make it authentic and believable
 """
 
-        llm = ChatOllama(model="mistral", validate_model_on_init=True, temperature=0.5)
+        llm = get_llm()
         response = llm.invoke(prompt)
         return response.content
 
@@ -68,8 +82,6 @@ Requirements:
 
 
 def create_review_agent():
-    # Initialize LLM
-    llm = ChatOllama(model="mistral", temperature=0.5)
 
     # Create prompt template
     prompt = """You are a helpful assistant that generates Amazon product reviews.
@@ -85,15 +97,14 @@ Be conversational and helpful. Guide users through the review creation process."
     # Create tools list
     tools = [generate_review]
 
-    model = ChatOllama(model="mistral", validate_model_on_init=True, temperature=0.5).bind_tools(tools)
-    return model
+    model = get_llm()
     # # Create agent
-    # return create_agent(
-    #     model="anthropic:claude-sonnet-4-5",
-    #     tools=tools,
-    #     system_prompt=prompt,
-    #     debug=True
-    # )
+    return create_agent(
+        model=model,
+        tools=tools,
+        system_prompt=prompt,
+        debug=True
+    )
 
 
 if __name__ == "__main__":
@@ -120,9 +131,10 @@ if __name__ == "__main__":
     }
 
 
-    output = agent.invoke(
-        f"Generate a review with this data: {json.dumps(review_data)}"
-    )
+    output =  agent.invoke({
+    "messages": [
+        {"role": "user", "content": f"Generate a review with this data: {json.dumps(review_data)}"}
+    ]})
 
     print(output)
 
