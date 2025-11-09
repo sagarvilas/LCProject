@@ -4,15 +4,6 @@ from pydantic import BaseModel, Field
 from typing import Optional, List
 import json
 from langchain.tools import tool
-import os
-from getpass import getpass
-from dotenv import load_dotenv
-
-load_dotenv(encoding='utf-8-sig')
-
-if "ANTHROPIC_API_KEY" not in os.environ:
-    print("Please set the environment variable 'ANTHROPIC_API_KEY'")
-    os.environ["ANTHROPIC_API_KEY"] = getpass()
 
 class ReviewInput(BaseModel):
     product_name: str = Field(description="Name of the product")
@@ -68,7 +59,7 @@ Requirements:
 - Make it authentic and believable
 """
 
-        llm = create_agent(model="anthropic:claude-sonnet-4-5")
+        llm = ChatOllama(model="mistral", validate_model_on_init=True, temperature=0.5)
         response = llm.invoke(prompt)
         return response.content
 
@@ -94,14 +85,15 @@ Be conversational and helpful. Guide users through the review creation process."
     # Create tools list
     tools = [generate_review]
 
-
-    # Create agent
-    return create_agent(
-        model="anthropic:claude-sonnet-4-5",
-        tools=tools,
-        system_prompt=prompt,
-        debug=True
-    )
+    model = ChatOllama(model="mistral", validate_model_on_init=True, temperature=0.5).bind_tools(tools)
+    return model
+    # # Create agent
+    # return create_agent(
+    #     model="anthropic:claude-sonnet-4-5",
+    #     tools=tools,
+    #     system_prompt=prompt,
+    #     debug=True
+    # )
 
 
 if __name__ == "__main__":
@@ -129,7 +121,7 @@ if __name__ == "__main__":
 
 
     output = agent.invoke(
-        {"messages": [{"role": "user", "content": f"Generate a review with this data: {json.dumps(review_data)}"}]}
+        f"Generate a review with this data: {json.dumps(review_data)}"
     )
 
     print(output)
